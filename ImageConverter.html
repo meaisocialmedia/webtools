@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Image Converter</title>
+    <style>
+        /* Modern CSS Design */
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+        }
+
+        .converter-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .drop-zone {
+            border: 3px dashed #bdc3c7;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 1.5rem;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--secondary);
+            background: #f8f9fa;
+        }
+
+        #preview {
+            max-width: 100%;
+            margin: 1rem 0;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        select, button {
+            padding: 0.8rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background: var(--secondary);
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 600px) {
+            .converter-container {
+                padding: 1rem;
+                margin: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="converter-container">
+        <h1 style="text-align: center; color: var(--primary);">Image Converter</h1>
+        
+        <div class="drop-zone" id="dropZone">
+            Drag & Drop Image or Click to Upload
+            <input type="file" id="fileInput" hidden accept="image/*">
+        </div>
+
+        <img id="preview" alt="Preview">
+        
+        <div class="controls">
+            <select id="formatSelect">
+                <option value="jpg">JPG</option>
+                <option value="png">PNG</option>
+                <option value="webp">WEBP</option>
+            </select>
+
+            <button onclick="convertImage()">Convert & Download</button>
+        </div>
+    </div>
+
+    <script>
+        // Drag & Drop Functionality
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const formatSelect = document.getElementById('formatSelect');
+
+        // Handle file selection
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+        
+        // Drag & Drop handlers
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = var(--secondary);
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#bdc3c7';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        // Image preview
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.style.display = 'block';
+                preview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Conversion function
+        function convertImage() {
+            if (!preview.src) {
+                alert('Please upload an image first');
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+
+                // Quality settings
+                const format = formatSelect.value;
+                let quality = 0.9;
+                if(format === 'webp') quality = 0.8;
+
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.download = `converted_image.${format}`;
+                    a.href = url;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }, `image/${format}`, quality);
+            };
+
+            img.src = preview.src;
+        }
+    </script>
+</body>
+</html>
