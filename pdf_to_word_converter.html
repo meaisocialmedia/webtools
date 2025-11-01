@@ -3,190 +3,122 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PDF to Word Converter — Single File</title>
-  <meta name="description" content="Convert PDF files to Word (DOCX) directly in your browser — no upload required." />
-
-  <!-- Tailwind CSS -->
+  <title>PDF to Word Converter | City of Tools</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- pdf.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-  </script>
+  <!-- Load pdf.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js" defer></script>
 
-  <!-- docx.js: use correct UMD build and fallback -->
-  <script>
-    async function loadDocxLibrary() {
-      const tryLoad = (url) => new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = url;
-        s.async = false;
-        s.onload = () => resolve();
-        s.onerror = () => reject();
-        document.head.appendChild(s);
-      });
-
-      const urls = [
-        'https://cdn.jsdelivr.net/npm/docx@8.0.0/build/docx.umd.js',
-        'https://unpkg.com/docx@7.7.0/build/index.umd.js'
-      ];
-
-      for (const url of urls) {
-        try {
-          await tryLoad(url);
-          if (window.docx) {
-            console.log('docx library loaded from', url);
-            return window.docx;
-          }
-        } catch (e) {
-          console.warn('Failed to load', url);
-        }
-      }
-
-      throw new Error('docx library is not available in this environment. Conversion cannot proceed.');
-    }
-  </script>
+  <!-- Load docx.js (deferred to ensure it's ready) -->
+  <script src="https://cdn.jsdelivr.net/npm/docx@8.0.2/build/docx.umd.min.js" defer></script>
 </head>
-<body class="bg-gray-50 text-gray-800">
-  <div class="min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-3xl bg-white rounded-2xl shadow-lg overflow-hidden">
-      <header class="px-6 py-6 border-b">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 2a2 2 0 0 0-2 2v4H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4V4a2 2 0 0 0-2-2z" />
-            </svg>
-            <div>
-              <h1 class="text-lg font-semibold">PDF to Word Converter</h1>
-              <p class="text-sm text-gray-500">Convert PDF documents to editable Word files instantly — all in your browser.</p>
-            </div>
-          </div>
-        </div>
-      </header>
 
-      <main class="p-6 space-y-6">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Upload PDF File</label>
-          <div id="dropzone" class="relative rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center cursor-pointer hover:border-indigo-300 transition">
-            <input id="fileInput" type="file" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-            <div class="flex flex-col items-center justify-center gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0l4-4m-4 4l-4-4m8 8H8a2 2 0 0 1-2-2v-4" />
-              </svg>
-              <p class="text-sm text-gray-600">Drag & drop your PDF here, or click to browse</p>
-            </div>
-          </div>
-          <p class="mt-3 text-xs text-gray-500">Your files never leave this browser — 100% secure & private.</p>
-        </div>
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
+  <div class="w-full max-w-xl bg-white rounded-2xl shadow-lg p-6 text-center">
+    <h1 class="text-2xl font-bold mb-2">PDF to Word Converter</h1>
+    <p class="text-gray-500 mb-6">Convert your PDF files into editable Word documents instantly.</p>
 
-        <div id="progressSection" class="hidden">
-          <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-            <div id="progressBar" class="h-3 bg-indigo-500 rounded-full" style="width:0%"></div>
-          </div>
-          <div class="mt-2 text-sm text-gray-600" id="progressText">Preparing...</div>
-        </div>
-
-        <div id="outputMsg" class="hidden text-center p-4 border rounded-lg bg-green-50 text-green-700 text-sm"></div>
-        <div id="infoMsg" class="text-sm text-center text-red-700 hidden"></div>
-      </main>
-
-      <footer class="px-6 py-5 border-t text-xs text-gray-500 text-center">
-        Built with <strong>pdf.js</strong> and <strong>docx</strong>. No server required.
-      </footer>
+    <div id="drop-zone" class="border-2 border-dashed border-gray-400 rounded-xl p-8 mb-4 cursor-pointer hover:border-blue-500 transition">
+      <p id="drop-text" class="text-gray-500">Drag & drop your PDF here or click to upload</p>
+      <input type="file" id="pdfInput" accept="application/pdf" class="hidden" />
     </div>
+
+    <button id="convertBtn" disabled
+      class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 hover:bg-blue-600 transition">
+      Convert to Word
+    </button>
+
+    <p id="status" class="mt-4 text-sm text-gray-500"></p>
   </div>
 
   <script>
-    const fileInput = document.getElementById('fileInput');
-    const dropzone = document.getElementById('dropzone');
-    const progressSection = document.getElementById('progressSection');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    const outputMsg = document.getElementById('outputMsg');
-    const infoMsg = document.getElementById('infoMsg');
+    const pdfInput = document.getElementById("pdfInput");
+    const dropZone = document.getElementById("drop-zone");
+    const convertBtn = document.getElementById("convertBtn");
+    const statusEl = document.getElementById("status");
 
-    ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => {
+    // Wait for docx library to be ready
+    async function ensureDocxLoaded() {
+      let waited = 0;
+      while (!window.docx && waited < 5000) {
+        await new Promise(r => setTimeout(r, 200));
+        waited += 200;
+      }
+      return !!window.docx;
+    }
+
+    // Handle drag/drop
+    dropZone.addEventListener("click", () => pdfInput.click());
+    dropZone.addEventListener("dragover", (e) => {
       e.preventDefault();
-      dropzone.classList.add('border-indigo-400', 'bg-indigo-50');
-    }));
-
-    ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => {
+      dropZone.classList.add("border-blue-500", "bg-blue-50");
+    });
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("border-blue-500", "bg-blue-50");
+    });
+    dropZone.addEventListener("drop", (e) => {
       e.preventDefault();
-      dropzone.classList.remove('border-indigo-400', 'bg-indigo-50');
-    }));
-
-    dropzone.addEventListener('drop', e => {
-      const files = e.dataTransfer.files;
-      if (files && files[0]) handleFile(files[0]);
+      dropZone.classList.remove("border-blue-500", "bg-blue-50");
+      pdfInput.files = e.dataTransfer.files;
+      statusEl.textContent = pdfInput.files.length ? `Selected: ${pdfInput.files[0].name}` : "";
+      convertBtn.disabled = !pdfInput.files.length;
     });
 
-    fileInput.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (file) handleFile(file);
+    pdfInput.addEventListener("change", () => {
+      statusEl.textContent = pdfInput.files.length ? `Selected: ${pdfInput.files[0].name}` : "";
+      convertBtn.disabled = !pdfInput.files.length;
     });
 
-    async function handleFile(file) {
-      outputMsg.classList.add('hidden');
-      infoMsg.classList.add('hidden');
-
-      if (!file.name.toLowerCase().endsWith('.pdf')) {
-        alert('Please upload a valid PDF file.');
+    // Conversion logic
+    convertBtn.addEventListener("click", async () => {
+      convertBtn.disabled = true;
+      statusEl.textContent = "Loading libraries...";
+      
+      const docxReady = await ensureDocxLoaded();
+      if (!docxReady) {
+        statusEl.textContent = "Error: docx library could not be loaded. Please refresh and try again.";
+        convertBtn.disabled = false;
         return;
       }
 
-      progressSection.classList.remove('hidden');
-      progressText.textContent = 'Loading libraries...';
-
-      let docxLib;
-      try {
-        docxLib = await loadDocxLibrary();
-      } catch (e) {
-        infoMsg.textContent = e.message;
-        infoMsg.classList.remove('hidden');
-        progressSection.classList.add('hidden');
+      const { Document, Packer, Paragraph } = window.docx;
+      const file = pdfInput.files[0];
+      if (!file) {
+        statusEl.textContent = "Please select a PDF file first.";
+        convertBtn.disabled = false;
         return;
       }
 
-      const { Document, Packer, Paragraph } = docxLib;
+      statusEl.textContent = "Reading PDF...";
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const pdfData = new Uint8Array(e.target.result);
+        const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+        let fullText = "";
 
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdfData = new Uint8Array(arrayBuffer);
-
-        const loadingTask = pdfjsLib.getDocument({ data: pdfData });
-        const pdf = await loadingTask.promise;
-        const totalPages = pdf.numPages;
-
-        const doc = new Document({ sections: [] });
-        for (let i = 1; i <= totalPages; i++) {
-          progressText.textContent = `Extracting text from page ${i}/${totalPages}`;
-          progressBar.style.width = `${(i / totalPages) * 100}%`;
+        for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          const text = content.items.map(t => t.str).join(' ');
-          doc.addSection({ children: [new Paragraph(text)] });
+          const textContent = await page.getTextContent();
+          const text = textContent.items.map(item => item.str).join(" ");
+          fullText += text + "\n\n";
         }
 
-        progressText.textContent = 'Generating Word document...';
+        statusEl.textContent = "Creating Word document...";
+        const paragraphs = fullText.split("\n").map(line => new Paragraph(line));
+        const doc = new Document({ sections: [{ properties: {}, children: paragraphs }] });
         const blob = await Packer.toBlob(doc);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = file.name.replace(/\.pdf$/i, '') + '.docx';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
 
-        progressText.textContent = 'Conversion complete!';
-        outputMsg.textContent = 'Word file generated successfully!';
-        outputMsg.classList.remove('hidden');
-      } catch (e) {
-        console.error(e);
-        infoMsg.textContent = 'An error occurred during conversion. See console for details.';
-        infoMsg.classList.remove('hidden');
-      }
-    }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name.replace(/\.pdf$/i, "") + ".docx";
+        a.click();
+
+        statusEl.textContent = "✅ Conversion complete! Word file downloaded.";
+        convertBtn.disabled = false;
+      };
+      reader.readAsArrayBuffer(file);
+    });
   </script>
 </body>
 </html>
