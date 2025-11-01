@@ -10,7 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js" defer></script>
 
   <!-- Load docx.js (deferred to ensure it's ready) -->
-  <script src="https://cdn.jsdelivr.net/npm/docx@8.0.2/build/docx.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx@7.7.0/build/docx.umd.min.js" defer></script>
 </head>
 
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
@@ -81,7 +81,14 @@
         return;
       }
 
-      const { Document, Packer, Paragraph } = window.docx;
+      await new Promise(resolve => {
+  const check = () => {
+    if (window.docx) return resolve();
+    setTimeout(check, 100);
+  };
+  check();
+});
+const { Document, Packer, Paragraph } = window.docx;
       const file = pdfInput.files[0];
       if (!file) {
         statusEl.textContent = "Please select a PDF file first.";
